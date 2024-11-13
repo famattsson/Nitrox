@@ -38,6 +38,8 @@
     "Nitrox_InvalidUserName": "Please enter a valid player name.\n\nIt can not contain any space or dubious characters\nAllowed characters: A-Z a-z 0-9 _ . -\nLength: [3, 25]",
     "Nitrox_Join": "Join",
     "Nitrox_JoinServer": "Joining:",
+    "Nitrox_JoinServerIpAddress": "Joining Server:",
+    "Nitrox_SubmitPassword": "Submit Password",
     "Nitrox_JoinServerPassword": "Password:",
     "Nitrox_JoinServerPasswordHeader": "Server password required",
     "Nitrox_JoinServerPlaceholder": "Please enter the server password",
