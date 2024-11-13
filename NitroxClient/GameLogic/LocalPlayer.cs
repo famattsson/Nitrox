@@ -32,7 +32,10 @@ public class LocalPlayer : ILocalNitroxPlayer
     public GameObject BodyPrototype => bodyPrototype.Value;
 
     public string PlayerName => multiplayerSession.AuthenticationContext.Username;
-    public ushort PlayerId => multiplayerSession.Reservation.PlayerId;
+    /// <summary>
+    ///     Gets the player id. The session is lost on disconnect so this can return null.
+    /// </summary>
+    public ushort? PlayerId => multiplayerSession?.Reservation?.PlayerId;
     public PlayerSettings PlayerSettings => multiplayerSession.PlayerSettings;
 
     public Perms Permissions;
@@ -48,34 +51,67 @@ public class LocalPlayer : ILocalNitroxPlayer
         Permissions = Perms.PLAYER;
     }
 
-    public void BroadcastLocation(Vector3 location, Vector3 velocity, Quaternion bodyRotation, Quaternion aimingRotation, Optional<VehicleMovementData> vehicle)
+    public void BroadcastLocation(Vector3 location, Vector3 velocity, Quaternion bodyRotation, Quaternion aimingRotation)
     {
-        Movement movement;
-        if (vehicle.HasValue)
+        if (!PlayerId.HasValue)
         {
-            movement = new VehicleMovement(PlayerId, vehicle.Value);
-        }
-        else
-        {
-            movement = new PlayerMovement(PlayerId, location.ToDto(), velocity.ToDto(), bodyRotation.ToDto(), aimingRotation.ToDto());
+            return;
         }
 
-        packetSender.Send(movement);
+        PlayerMovement playerMovement = new(PlayerId.Value, location.ToDto(), velocity.ToDto(), bodyRotation.ToDto(), aimingRotation.ToDto());
+
+        packetSender.Send(playerMovement);
     }
 
-    public void AnimationChange(AnimChangeType type, AnimChangeState state) => packetSender.Send(new AnimationChangeEvent(PlayerId, (int)type, (int)state));
+    public void AnimationChange(AnimChangeType type, AnimChangeState state)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new AnimationChangeEvent(PlayerId.Value, (int)type, (int)state));
+        }
+    }
 
-    public void BroadcastStats(float oxygen, float maxOxygen, float health, float food, float water, float infectionAmount) => packetSender.Send(new PlayerStats(PlayerId, oxygen, maxOxygen, health, food, water, infectionAmount));
+    public void BroadcastStats(float oxygen, float maxOxygen, float health, float food, float water, float infectionAmount)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new PlayerStats(PlayerId.Value, oxygen, maxOxygen, health, food, water, infectionAmount));
+        }
+    }
 
-    public void BroadcastDeath(Vector3 deathPosition) => packetSender.Send(new PlayerDeathEvent(PlayerId, deathPosition.ToDto()));
+    public void BroadcastDeath(Vector3 deathPosition)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new PlayerDeathEvent(PlayerId.Value, deathPosition.ToDto()));
+        }
+    }
 
-    public void BroadcastSubrootChange(Optional<NitroxId> subrootId) => packetSender.Send(new SubRootChanged(PlayerId, subrootId));
+    public void BroadcastSubrootChange(Optional<NitroxId> subrootId)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new SubRootChanged(PlayerId.Value, subrootId));
+        }
+    }
 
-    public void BroadcastEscapePodChange(Optional<NitroxId> escapePodId) => packetSender.Send(new EscapePodChanged(PlayerId, escapePodId));
+    public void BroadcastEscapePodChange(Optional<NitroxId> escapePodId)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new EscapePodChanged(PlayerId.Value, escapePodId));
+        }
+    }
 
     public void BroadcastWeld(NitroxId id, float healthAdded) => packetSender.Send(new WeldAction(id, healthAdded));
 
-    public void BroadcastHeldItemChanged(NitroxId itemId, PlayerHeldItemChanged.ChangeType techType, NitroxTechType isFirstTime) => packetSender.Send(new PlayerHeldItemChanged(PlayerId, itemId, techType, isFirstTime));
+    public void BroadcastHeldItemChanged(NitroxId itemId, PlayerHeldItemChanged.ChangeType techType, NitroxTechType isFirstTime)
+    {
+        if (PlayerId.HasValue)
+        {
+            packetSender.Send(new PlayerHeldItemChanged(PlayerId.Value, itemId, techType, isFirstTime));
+        }
+    }
 
     public void BroadcastQuickSlotsBindingChanged(Optional<NitroxId>[] slotItemIds) => throttledPacketSender.SendThrottled(new PlayerQuickSlotsBindingChanged(slotItemIds), (packet) => 1);
 

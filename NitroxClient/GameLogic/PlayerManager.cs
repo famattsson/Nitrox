@@ -8,6 +8,7 @@ using NitroxModel.DataStructures.Util;
 using NitroxModel.GameLogic.FMOD;
 using NitroxModel.Helper;
 using NitroxModel.MultiplayerSession;
+using UnityEngine;
 
 namespace NitroxClient.GameLogic;
 
@@ -34,6 +35,11 @@ public class PlayerManager
         return Optional.OfNullable(player);
     }
 
+    public bool TryFind(ushort playerId, out RemotePlayer remotePlayer)
+    {
+        return playersById.TryGetValue(playerId, out remotePlayer);
+    }
+
     public Optional<RemotePlayer> Find(NitroxId playerNitroxId)
     {
         RemotePlayer remotePlayer = playersById.Select(idToPlayer => idToPlayer.Value)
@@ -45,6 +51,13 @@ public class PlayerManager
     internal IEnumerable<RemotePlayer> GetAll()
     {
         return playersById.Values;
+    }
+
+    public HashSet<GameObject> GetAllPlayerObjects()
+    {
+        HashSet<GameObject> remotePlayerObjects = GetAll().Select(player => player.Body).ToSet();
+        remotePlayerObjects.Add(Player.mainObject);
+        return remotePlayerObjects;
     }
 
     public RemotePlayer Create(PlayerContext playerContext)

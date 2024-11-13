@@ -35,7 +35,7 @@ namespace NitroxServer.Communication.Packets.Processors
             this.buildingManager = buildingManager;
         }
 
-        public override void Process(PlayerJoiningMultiplayerSession packet, NitroxConnection connection)
+        public override void Process(PlayerJoiningMultiplayerSession packet, INitroxConnection connection)
         {
             Player player = playerManager.PlayerConnected(connection, packet.ReservationKey, out bool wasBrandNewPlayer);
             NitroxId assignedEscapePodId = world.EscapePodManager.AssignPlayerToEscapePod(player.Id, out Optional<EscapePodWorldEntity> newlyCreatedEscapePod);
@@ -57,7 +57,7 @@ namespace NitroxServer.Communication.Packets.Processors
 
             List<SimulatedEntity> simulations = world.EntitySimulation.AssignGlobalRootEntitiesAndGetData(player);
 
-            player.Entity = wasBrandNewPlayer ? SetupPlayerEntity(player) : RespawnExistingEntity(player); ;
+            player.Entity = wasBrandNewPlayer ? SetupPlayerEntity(player) : RespawnExistingEntity(player);
 
             List<GlobalRootEntity> globalRootEntities = world.WorldEntityManager.GetGlobalRootEntities(true);
             bool isFirstPlayer = playerManager.GetConnectedPlayers().Count == 1;

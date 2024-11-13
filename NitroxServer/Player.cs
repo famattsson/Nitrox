@@ -21,7 +21,7 @@ namespace NitroxServer
         public ThreadSafeList<NitroxTechType> UsedItems { get; }
         public Optional<NitroxId>[] QuickSlotsBindingIds { get; set; }
 
-        public NitroxConnection Connection { get; set; }
+        public INitroxConnection Connection { get; set; }
         public PlayerSettings PlayerSettings => PlayerContext.PlayerSettings;
         public PlayerContext PlayerContext { get; set; }
         public ushort Id { get; }
@@ -29,7 +29,7 @@ namespace NitroxServer
         public bool IsPermaDeath { get; set; }
         public NitroxVector3 Position { get; set; }
         public NitroxQuaternion Rotation { get; set; }
-        public NitroxId GameObjectId { get; }
+        public NitroxId GameObjectId { get; set; }
         public Optional<NitroxId> SubRootId { get; set; }
         public Perms Permissions { get; set; }
         public PlayerStatsData Stats { get; set; }
@@ -42,7 +42,7 @@ namespace NitroxServer
 
         public PlayerWorldEntity Entity { get; set; }
 
-        public Player(ushort id, string name, bool isPermaDeath, PlayerContext playerContext, NitroxConnection connection,
+        public Player(ushort id, string name, bool isPermaDeath, PlayerContext playerContext, INitroxConnection connection,
                       NitroxVector3 position, NitroxQuaternion rotation, NitroxId playerId, Optional<NitroxId> subRootId, Perms perms, PlayerStatsData stats, NitroxGameMode gameMode,
                       IEnumerable<NitroxTechType> usedItems, Optional<NitroxId>[] quickSlotsBindingIds,
                       IEnumerable<EquippedItemData> equippedItems, IEnumerable<EquippedItemData> modules, IDictionary<string, float> personalCompletedGoalsWithTimestamp, IDictionary<string, PingInstancePreference> pingInstancePreferences, IList<int> pinnedRecipePreferences)
