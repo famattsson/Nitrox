@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using NitroxClient.Communication.Abstract;
 using NitroxClient.GameLogic;
@@ -23,7 +24,7 @@ public sealed partial class StasisSphere_OnHit_Patch : NitroxPatch, IDynamicPatc
             return false;
         }
 
-        ushort localPlayerId = Resolve<LocalPlayer>().PlayerId;
+        ushort localPlayerId = Resolve<LocalPlayer>().PlayerId ?? throw new Exception("PlayerId was null");
         NitroxVector3 position = __instance.tr.position.ToDto();
         NitroxQuaternion rotation = __instance.tr.rotation.ToDto();
         // Calculate the chargeNormalized value which was passed to StasisSphere.Shoot
