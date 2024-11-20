@@ -66,16 +66,6 @@ namespace NitroxClient
                             .AsImplementedInterfaces()
                             .AsSelf()
                             .SingleInstance();
-
-            containerBuilder.RegisterAssemblyTypes(currentAssembly)
-                            .AssignableTo<IDrawer>()
-                            .As<IDrawer>()
-                            .SingleInstance();
-
-            containerBuilder.RegisterAssemblyTypes(currentAssembly)
-                            .AssignableTo<IStructDrawer>()
-                            .As<IStructDrawer>()
-                            .SingleInstance();
 #endif
             containerBuilder.Register(c => new NitroxProtobufSerializer($"{nameof(NitroxModel)}.dll"));
 
@@ -135,6 +125,7 @@ namespace NitroxClient
             containerBuilder.RegisterType<PlayerCinematics>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<NitroxPDATabManager>().InstancePerLifetimeScope();
             containerBuilder.RegisterType<TimeManager>().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<BulletManager>().InstancePerLifetimeScope();
         }
 
         private void RegisterMetadataDependencies(ContainerBuilder containerBuilder)

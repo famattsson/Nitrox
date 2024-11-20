@@ -8,6 +8,7 @@ using NitroxModel.DataStructures.Util;
 using NitroxModel.GameLogic.FMOD;
 using NitroxModel.Helper;
 using NitroxModel.MultiplayerSession;
+using UnityEngine;
 
 namespace NitroxClient.GameLogic;
 
@@ -34,6 +35,11 @@ public class PlayerManager
         return Optional.OfNullable(player);
     }
 
+    public bool TryFind(ushort playerId, out RemotePlayer remotePlayer)
+    {
+        return playersById.TryGetValue(playerId, out remotePlayer);
+    }
+
     public Optional<RemotePlayer> Find(NitroxId playerNitroxId)
     {
         RemotePlayer remotePlayer = playersById.Select(idToPlayer => idToPlayer.Value)
@@ -47,15 +53,22 @@ public class PlayerManager
         return playersById.Values;
     }
 
+    public HashSet<GameObject> GetAllPlayerObjects()
+    {
+        HashSet<GameObject> remotePlayerObjects = GetAll().Select(player => player.Body).ToSet();
+        remotePlayerObjects.Add(Player.mainObject);
+        return remotePlayerObjects;
+    }
+
     public RemotePlayer Create(PlayerContext playerContext)
     {
         Validate.NotNull(playerContext);
         Validate.IsFalse(playersById.ContainsKey(playerContext.PlayerId));
 
-        RemotePlayer remotePlayer = new(playerContext, playerModelManager, playerVitalsManager, fmodWhitelist);
-
-        playersById.Add(remotePlayer.PlayerId, remotePlayer);
-        onCreate(remotePlayer.PlayerId.ToString(), remotePlayer);
+            RemotePlayer remotePlayer = new(playerContext, playerModelManager, playerVitalsManager, fmodWhitelist);
+            
+            playersById.Add(remotePlayer.PlayerId, remotePlayer);
+            onCreate(remotePlayer.PlayerId, remotePlayer);
 
         DiscordClient.UpdatePartySize(GetTotalPlayerCount());
 
@@ -69,7 +82,7 @@ public class PlayerManager
         {
             opPlayer.Value.Destroy();
             playersById.Remove(playerId);
-            onRemove(playerId.ToString(), opPlayer.Value);
+            onRemove(playerId, opPlayer.Value);
             DiscordClient.UpdatePartySize(GetTotalPlayerCount());
         }
     }
@@ -79,6 +92,6 @@ public class PlayerManager
         return playersById.Count + 1; //Multiplayer-player(s) + you
     }
 
-    public delegate void OnCreate(string playerId, RemotePlayer remotePlayer);
-    public delegate void OnRemove(string playerId, RemotePlayer remotePlayer);
+    public delegate void OnCreate(ushort playerId, RemotePlayer remotePlayer);
+    public delegate void OnRemove(ushort playerId, RemotePlayer remotePlayer);
 }

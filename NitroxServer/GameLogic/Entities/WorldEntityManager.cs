@@ -82,15 +82,12 @@ public class WorldEntityManager
 
     public Optional<AbsoluteEntityCell> UpdateEntityPosition(NitroxId id, NitroxVector3 position, NitroxQuaternion rotation)
     {
-        Optional<WorldEntity> opEntity = entityRegistry.GetEntityById<WorldEntity>(id);
-
-        if (!opEntity.HasValue)
+        if (!entityRegistry.TryGetEntityById(id, out WorldEntity entity))
         {
-            Log.Debug("Could not update entity position because it was not found (maybe it was recently picked up)");
+            Log.WarnOnce($"[{nameof(WorldEntityManager)}] Can't update entity position of {entity.Id} because it isn't registered");
             return Optional.Empty;
         }
 
-        WorldEntity entity = opEntity.Value;
         AbsoluteEntityCell oldCell = entity.AbsoluteEntityCell;
 
         entity.Transform.Position = position;
@@ -116,22 +113,27 @@ public class WorldEntityManager
                 // to make sure that they won't be removed
                 if (entityRegistry.TryGetEntityById(entityId, out GlobalRootEntity globalRootEntity))
                 {
-                    List<PlayerWorldEntity> playerEntities = FindPlayerEntitiesInChildren(globalRootEntity);
-                    foreach (PlayerWorldEntity childPlayerEntity in playerEntities)
-                    {
-                        // Reparent the entity on top of GlobalRoot
-                        globalRootEntity.ChildEntities.Remove(childPlayerEntity);
-                        childPlayerEntity.ParentId = null;
-
-                        // Make sure the PlayerEntity is correctly registered
-                        AddOrUpdateGlobalRootEntity(childPlayerEntity);
-                    }
+                    MovePlayerChildrenToRoot(globalRootEntity);
                 }
                 removedEntity = entityRegistry.RemoveEntity(entityId);
             }
             globalRootEntitiesById.Remove(entityId);
         }
         return removedEntity;
+    }
+
+    public void MovePlayerChildrenToRoot(GlobalRootEntity globalRootEntity)
+    {
+        List<PlayerWorldEntity> playerEntities = FindPlayerEntitiesInChildren(globalRootEntity);
+        foreach (PlayerWorldEntity childPlayerEntity in playerEntities)
+        {
+            // Reparent the entity on top of GlobalRoot
+            globalRootEntity.ChildEntities.Remove(childPlayerEntity);
+            childPlayerEntity.ParentId = null;
+
+            // Make sure the PlayerEntity is correctly registered
+            AddOrUpdateGlobalRootEntity(childPlayerEntity);
+        }
     }
 
     public void TrackEntityInTheWorld(WorldEntity entity)
@@ -284,16 +286,18 @@ public class WorldEntityManager
         }
     }
 
-    public bool TryDestroyEntity(NitroxId entityId, out Optional<Entity> entity)
+    public bool TryDestroyEntity(NitroxId entityId, out Entity entity)
     {
-        entity = entityRegistry.RemoveEntity(entityId);
+        Optional<Entity> optEntity = entityRegistry.RemoveEntity(entityId);
 
-        if (!entity.HasValue)
+        if (!optEntity.HasValue)
         {
+            entity = null;
             return false;
         }
+        entity = optEntity.Value;
 
-        if (entity.Value is WorldEntity worldEntity)
+        if (entity is WorldEntity worldEntity)
         {
             StopTrackingEntity(worldEntity);
         }
