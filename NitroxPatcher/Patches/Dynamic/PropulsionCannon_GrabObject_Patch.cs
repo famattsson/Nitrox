@@ -1,8 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 using NitroxClient.GameLogic;
-using NitroxClient.GameLogic.HUD.Components;
 using NitroxClient.GameLogic.Simulation;
 using NitroxClient.MonoBehaviours;
+using NitroxClient.MonoBehaviours.Gui.HUD;
 using NitroxModel.DataStructures;
 using NitroxModel.Helper;
 using UnityEngine;
@@ -45,7 +45,11 @@ public sealed partial class PropulsionCannon_GrabObject_Patch : NitroxPatch, IDy
     {
         if (lockAquired)
         {
-            EntityPositionBroadcaster.WatchEntity(id);
+            // In case what we grabbed wasn't a vehicle, we'll be watching it with the regular entity position broadcast system
+            if (!Resolve<SimulationOwnership>().TreatVehicleEntity(id, true, SimulationLockType.EXCLUSIVE))
+            {
+                EntityPositionBroadcaster.WatchEntity(id);
+            }
 
             skipPrefixPatch = true;
             context.Cannon.GrabObject(context.GrabbedObject);

@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nitrox.Test;
 using Nitrox.Test.Helper.Faker;
 using NitroxModel.Core;
@@ -76,9 +70,6 @@ public class WorldPersistenceTest
             case EquippedItemData equippedItemData when itemDataAfter is EquippedItemData equippedItemDataAfter:
                 Assert.AreEqual(equippedItemData.Slot, equippedItemDataAfter.Slot);
                 Assert.AreEqual(equippedItemData.TechType, equippedItemDataAfter.TechType);
-                break;
-            case PlantableItemData plantableItemData when itemDataAfter is PlantableItemData plantableItemDataAfter:
-                Assert.AreEqual(plantableItemData.PlantedGameTime, plantableItemDataAfter.PlantedGameTime);
                 break;
             default:
                 Assert.Fail($"Runtime types of {nameof(ItemData)} where not equal");
@@ -235,7 +226,12 @@ public class WorldPersistenceTest
                 Assert.AreEqual(metadata.Duration, metadataAfter.Duration);
                 break;
             case PlantableMetadata metadata when entityAfter.Metadata is PlantableMetadata metadataAfter:
-                Assert.AreEqual(metadata.Progress, metadataAfter.Progress);
+                Assert.AreEqual(metadata.TimeStartGrowth, metadataAfter.TimeStartGrowth);
+                Assert.AreEqual(metadata.SlotID, metadataAfter.SlotID);
+                break;
+            case FruitPlantMetadata metadata when entityAfter.Metadata is FruitPlantMetadata metadataAfter:
+                Assert.AreEqual(metadata.PickedStates, metadataAfter.PickedStates);
+                Assert.AreEqual(metadata.TimeNextFruit, metadataAfter.TimeNextFruit);
                 break;
             case CyclopsMetadata metadata when entityAfter.Metadata is CyclopsMetadata metadataAfter:
                 Assert.AreEqual(metadata.SilentRunningOn, metadataAfter.SilentRunningOn);
@@ -324,6 +320,17 @@ public class WorldPersistenceTest
                 Assert.AreEqual(metadata.Health, metadataAfter.Health);
                 Assert.AreEqual(metadata.FixRealTime, metadataAfter.FixRealTime);
                 break;
+            case CrashHomeMetadata metadata when entityAfter.Metadata is CrashHomeMetadata metadataAfter:
+                Assert.AreEqual(metadata.SpawnTime, metadataAfter.SpawnTime);
+                break;
+            case EatableMetadata metadata when entityAfter.Metadata is EatableMetadata metadataAfter:
+                Assert.AreEqual(metadata.TimeDecayStart, metadataAfter.TimeDecayStart);
+                break;
+            case SeaTreaderMetadata metadata when entityAfter.Metadata is SeaTreaderMetadata metadataAfter:
+                Assert.AreEqual(metadata.ReverseDirection, metadataAfter.ReverseDirection);
+                Assert.AreEqual(metadata.GrazingEndTime, metadataAfter.GrazingEndTime);
+                Assert.AreEqual(metadata.LeashPosition, metadataAfter.LeashPosition);
+                break;
             default:
                 Assert.Fail($"Runtime type of {nameof(Entity)}.{nameof(Entity.Metadata)} is not equal: {entity.Metadata?.GetType().Name} - {entityAfter.Metadata?.GetType().Name}");
                 break;
@@ -368,6 +375,22 @@ public class WorldPersistenceTest
                             Assert.AreEqual(serializedWorldEntity.Layer, serializedWorldEntityAfter.Layer);
                             Assert.AreEqual(serializedWorldEntity.BatchId, serializedWorldEntityAfter.BatchId);
                             Assert.AreEqual(serializedWorldEntity.CellId, serializedWorldEntityAfter.CellId);
+                            break;
+                        case GeyserWorldEntity geyserEntity when entityAfter is GeyserWorldEntity geyserEntityAfter:
+                            Assert.AreEqual(geyserEntity.RandomIntervalVarianceMultiplier, geyserEntityAfter.RandomIntervalVarianceMultiplier);
+                            Assert.AreEqual(geyserEntity.StartEruptTime, geyserEntityAfter.StartEruptTime);
+                            break;
+                        case ReefbackEntity reefbackEntity when entityAfter is ReefbackEntity reefbackEntityAfter:
+                            Assert.AreEqual(reefbackEntity.GrassIndex, reefbackEntityAfter.GrassIndex);
+                            Assert.AreEqual(reefbackEntity.OriginalPosition, reefbackEntityAfter.OriginalPosition);
+                            break;
+                        case ReefbackChildEntity reefbackChildEntity when entityAfter is ReefbackChildEntity reefbackChildEntityAfter:
+                            Assert.AreEqual(reefbackChildEntity.Type, reefbackChildEntityAfter.Type);
+                            break;
+                        case CreatureRespawnEntity creatureRespawnEntity when entityAfter is CreatureRespawnEntity creatureRespawnEntityAfter:
+                            Assert.AreEqual(creatureRespawnEntity.SpawnTime, creatureRespawnEntityAfter.SpawnTime);
+                            Assert.AreEqual(creatureRespawnEntity.RespawnTechType, creatureRespawnEntityAfter.RespawnTechType);
+                            Assert.IsTrue(creatureRespawnEntity.AddComponents.SequenceEqual(creatureRespawnEntityAfter.AddComponents));
                             break;
                         case GlobalRootEntity globalRootEntity when worldEntityAfter is GlobalRootEntity globalRootEntityAfter:
                             if (globalRootEntity.GetType() != typeof(GlobalRootEntity))
@@ -451,6 +474,10 @@ public class WorldPersistenceTest
             case InstalledModuleEntity installedModuleEntity when entityAfter is InstalledModuleEntity installedModuleEntityAfter:
                 Assert.AreEqual(installedModuleEntity.Slot, installedModuleEntityAfter.Slot);
                 Assert.AreEqual(installedModuleEntity.ClassId, installedModuleEntityAfter.ClassId);
+                break;
+            case BaseLeakEntity baseLeakEntity when entityAfter is BaseLeakEntity baseLeakEntityAfter:
+                Assert.AreEqual(baseLeakEntity.Health, baseLeakEntityAfter.Health);
+                Assert.AreEqual(baseLeakEntity.RelativeCell, baseLeakEntityAfter.RelativeCell);
                 break;
             default:
                 Assert.Fail($"Runtime type of {nameof(Entity)} is not equal: {entity.GetType().Name} - {entityAfter.GetType().Name}");

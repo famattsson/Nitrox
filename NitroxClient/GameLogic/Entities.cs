@@ -19,7 +19,6 @@ using NitroxModel.DataStructures.GameLogic.Entities.Bases;
 using NitroxModel.DataStructures.GameLogic.Entities.Metadata;
 using NitroxModel.DataStructures.Util;
 using NitroxModel.Packets;
-using NitroxModel_Subnautica.DataStructures;
 using UnityEngine;
 using UWE;
 
@@ -30,6 +29,7 @@ namespace NitroxClient.GameLogic
         private readonly IPacketSender packetSender;
         private readonly ThrottledPacketSender throttledPacketSender;
         private readonly EntityMetadataManager entityMetadataManager;
+        private readonly SimulationOwnership simulationOwnership;
 
         private readonly Dictionary<NitroxId, Type> spawnedAsType = new();
         private readonly Dictionary<NitroxId, List<Entity>> pendingParentEntitiesByParentId = new Dictionary<NitroxId, List<Entity>>();
@@ -39,11 +39,15 @@ namespace NitroxClient.GameLogic
         public List<Entity> EntitiesToSpawn { get; private init; }
         private bool spawningEntities;
 
-        public Entities(IPacketSender packetSender, ThrottledPacketSender throttledPacketSender, EntityMetadataManager entityMetadataManager, PlayerManager playerManager, ILocalNitroxPlayer localPlayer, TimeManager timeManager)
+        private readonly HashSet<NitroxId> deletedEntitiesIds = new();
+        private readonly List<SimulatedEntity> pendingSimulatedEntities = new();
+
+        public Entities(IPacketSender packetSender, ThrottledPacketSender throttledPacketSender, EntityMetadataManager entityMetadataManager, PlayerManager playerManager, ILocalNitroxPlayer localPlayer, LiveMixinManager liveMixinManager, TimeManager timeManager, SimulationOwnership simulationOwnership)
         {
             this.packetSender = packetSender;
             this.throttledPacketSender = throttledPacketSender;
             this.entityMetadataManager = entityMetadataManager;
+            this.simulationOwnership = simulationOwnership;
             EntitiesToSpawn = new();
 
             entitySpawnersByType[typeof(PrefabChildEntity)] = new PrefabChildEntitySpawner();
@@ -51,8 +55,8 @@ namespace NitroxClient.GameLogic
             entitySpawnersByType[typeof(InstalledModuleEntity)] = new InstalledModuleEntitySpawner();
             entitySpawnersByType[typeof(InstalledBatteryEntity)] = new InstalledBatteryEntitySpawner();
             entitySpawnersByType[typeof(InventoryEntity)] = new InventoryEntitySpawner();
-            entitySpawnersByType[typeof(InventoryItemEntity)] = new InventoryItemEntitySpawner();
-            entitySpawnersByType[typeof(WorldEntity)] = new WorldEntitySpawner(entityMetadataManager, playerManager, localPlayer, this);
+            entitySpawnersByType[typeof(InventoryItemEntity)] = new InventoryItemEntitySpawner(entityMetadataManager);
+            entitySpawnersByType[typeof(WorldEntity)] = new WorldEntitySpawner(entityMetadataManager, playerManager, localPlayer, this, simulationOwnership);
             entitySpawnersByType[typeof(PlaceholderGroupWorldEntity)] = entitySpawnersByType[typeof(WorldEntity)];
             entitySpawnersByType[typeof(PrefabPlaceholderEntity)] = entitySpawnersByType[typeof(WorldEntity)];
             entitySpawnersByType[typeof(EscapePodWorldEntity)] = entitySpawnersByType[typeof(WorldEntity)];
@@ -60,13 +64,18 @@ namespace NitroxClient.GameLogic
             entitySpawnersByType[typeof(VehicleWorldEntity)] = entitySpawnersByType[typeof(WorldEntity)];
             entitySpawnersByType[typeof(SerializedWorldEntity)] = entitySpawnersByType[typeof(WorldEntity)];
             entitySpawnersByType[typeof(GlobalRootEntity)] = new GlobalRootEntitySpawner();
+            entitySpawnersByType[typeof(BaseLeakEntity)] = new BaseLeakEntitySpawner(liveMixinManager);
+            entitySpawnersByType[typeof(BuildEntity)] = new BuildEntitySpawner(this, (BaseLeakEntitySpawner)entitySpawnersByType[typeof(BaseLeakEntity)]);
             entitySpawnersByType[typeof(RadiationLeakEntity)] = new RadiationLeakEntitySpawner(timeManager);
-            entitySpawnersByType[typeof(BuildEntity)] = new BuildEntitySpawner(this);
             entitySpawnersByType[typeof(ModuleEntity)] = new ModuleEntitySpawner(this);
             entitySpawnersByType[typeof(GhostEntity)] = new GhostEntitySpawner();
             entitySpawnersByType[typeof(OxygenPipeEntity)] = new OxygenPipeEntitySpawner(this, (WorldEntitySpawner)entitySpawnersByType[typeof(WorldEntity)]);
             entitySpawnersByType[typeof(PlacedWorldEntity)] = new PlacedWorldEntitySpawner((WorldEntitySpawner)entitySpawnersByType[typeof(WorldEntity)]);
             entitySpawnersByType[typeof(InteriorPieceEntity)] = new InteriorPieceEntitySpawner(this, entityMetadataManager);
+            entitySpawnersByType[typeof(GeyserWorldEntity)] = entitySpawnersByType[typeof(WorldEntity)];
+            entitySpawnersByType[typeof(ReefbackEntity)] = entitySpawnersByType[typeof(WorldEntity)];
+            entitySpawnersByType[typeof(ReefbackChildEntity)] = entitySpawnersByType[typeof(WorldEntity)];
+            entitySpawnersByType[typeof(CreatureRespawnEntity)] = entitySpawnersByType[typeof(WorldEntity)];
         }
 
         public void EntityMetadataChanged(object o, NitroxId id)
@@ -104,9 +113,9 @@ namespace NitroxClient.GameLogic
             throttledPacketSender.SendThrottled(new EntityMetadataUpdate(id, metadata), packet => packet.Id, throttleTime);
         }
 
-        public void BroadcastEntitySpawnedByClient(WorldEntity entity)
+        public void BroadcastEntitySpawnedByClient(Entity entity, bool requireRespawn = false)
         {
-            packetSender.Send(new EntitySpawnedByClient(entity));
+            packetSender.Send(new EntitySpawnedByClient(entity, requireRespawn));
         }
 
         private IEnumerator SpawnNewEntities()
@@ -123,6 +132,12 @@ namespace NitroxClient.GameLogic
                 }
             });
             spawningEntities = restarted;
+            if (!spawningEntities)
+            {
+                entityMetadataManager.ClearNewerMetadata();
+                deletedEntitiesIds.Clear();
+                simulationOwnership.ClearNewerSimulations();
+            }
         }
 
         public void EnqueueEntitiesToSpawn(List<Entity> entitiesToEnqueue)
@@ -149,7 +164,7 @@ namespace NitroxClient.GameLogic
 
             TaskResult<Optional<GameObject>> entityResult = new();
             TaskResult<Exception> exception = new();
-            
+
             while (batch.Count > 0)
             {
                 entityResult.Set(Optional.Empty);
@@ -159,12 +174,13 @@ namespace NitroxClient.GameLogic
                 batch.RemoveAt(batch.Count - 1);
 
                 // Preconditions which may get the spawn process cancelled or postponed
+                if (deletedEntitiesIds.Remove(entity.Id))
+                {
+                    continue;
+                }
                 if (WasAlreadySpawned(entity) && !forceRespawn)
                 {
-                    if (entity is WorldEntity worldEntity)
-                    {
-                        UpdatePosition(worldEntity);
-                    }
+                    UpdateEntity(entity);
                     continue;
                 }
                 else if (entity.ParentId != null && !IsParentReady(entity.ParentId))
@@ -196,9 +212,10 @@ namespace NitroxClient.GameLogic
                     continue;
                 }
 
-                MarkAsSpawned(entity);
-
                 entityMetadataManager.ApplyMetadata(entityResult.Get().Value, entity.Metadata);
+                simulationOwnership.ApplyNewerSimulation(entity.Id);
+
+                MarkAsSpawned(entity);
 
                 // Finding out about all children (can be hidden in the object's hierarchy or in a pending list)
                 
@@ -224,9 +241,9 @@ namespace NitroxClient.GameLogic
             }
         }
 
-        public IEnumerator SpawnEntityAsync(Entity entity, bool forceRespawn = false)
+        public IEnumerator SpawnEntityAsync(Entity entity, bool forceRespawn = false, bool skipFrames = false)
         {
-            return SpawnBatchAsync(new() { entity }, forceRespawn, skipFrames: false);
+            return SpawnBatchAsync(new() { entity }, forceRespawn, skipFrames);
         }
 
         public void CleanupExistingEntities(List<Entity> dirtyEntities)
@@ -244,21 +261,16 @@ namespace NitroxClient.GameLogic
             }
         }
 
-        private void UpdatePosition(WorldEntity entity)
+        private void UpdateEntity(Entity entity)
         {
-            Optional<GameObject> opGameObject = NitroxEntity.GetObjectFrom(entity.Id);
-
-            if (!opGameObject.HasValue)
+            if (!NitroxEntity.TryGetObjectFrom(entity.Id, out GameObject gameObject))
             {
 #if DEBUG && ENTITY_LOG
                 Log.Error($"Entity was already spawned but not found(is it in another chunk?) NitroxId: {entity.Id} TechType: {entity.TechType} ClassId: {entity.ClassId} Transform: {entity.Transform}");
 #endif
                 return;
             }
-
-            opGameObject.Value.transform.position = entity.Transform.Position.ToUnity();
-            opGameObject.Value.transform.rotation = entity.Transform.Rotation.ToUnity();
-            opGameObject.Value.transform.localScale = entity.Transform.LocalScale.ToUnity();
+            entityMetadataManager.ApplyMetadata(gameObject, entity.Metadata);
         }
 
         private void AddPendingParentEntity(Entity entity)
@@ -279,7 +291,7 @@ namespace NitroxClient.GameLogic
         {
             if (spawnedAsType.TryGetValue(entity.Id, out Type type))
             {
-                return (type == entity.GetType());
+                return type == entity.GetType() && NitroxEntity.TryGetObjectFrom(entity.Id, out _);
             }
 
             return false;
@@ -315,7 +327,12 @@ namespace NitroxClient.GameLogic
             spawnedAsType[entity.Id] = entity.GetType();
         }
 
-        public bool RemoveEntity(NitroxId id) => spawnedAsType.Remove(id);
+        public void RemoveEntity(NitroxId id) => spawnedAsType.Remove(id);
+
+        public void MarkForDeletion(NitroxId id)
+        {
+            deletedEntitiesIds.Add(id);
+        }
 
         /// <summary>
         /// Allows the ability to respawn an entity and its entire hierarchy. Callers are responsible for ensuring the

@@ -26,9 +26,6 @@ public sealed partial class LiveMixin_TakeDamage_Patch : NitroxPatch, IDynamicPa
             return true; // everyone should process this locally
         }
 
-        // Persist the previous health value
-        __state = __instance.health;
-
         return Resolve<LiveMixinManager>().ShouldApplyNextHealthUpdate(__instance, dealer);
     }
 

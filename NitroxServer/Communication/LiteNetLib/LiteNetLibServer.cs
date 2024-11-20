@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using LiteNetLib;
@@ -31,6 +31,7 @@ public class LiteNetLibServer : NitroxServer
         listener.NetworkReceiveEvent += NetworkDataReceived;
         listener.ConnectionRequestEvent += OnConnectionRequest;
 
+        server.ChannelsCount = (byte)typeof(Packet.UdpChannelId).GetEnumValues().Length;
         server.BroadcastReceiveEnabled = true;
         server.UnconnectedMessagesEnabled = true;
         server.UpdateTime = 15;
@@ -131,7 +132,7 @@ public class LiteNetLibServer : NitroxServer
         {
             reader.GetBytes(packetData, packetDataLength);
             Packet packet = Packet.Deserialize(packetData);
-            NitroxConnection connection = GetConnection(peer.Id);
+            INitroxConnection connection = GetConnection(peer.Id);
             ProcessIncomingData(connection, packet);
         }
         finally
@@ -140,9 +141,9 @@ public class LiteNetLibServer : NitroxServer
         }
     }
 
-    private NitroxConnection GetConnection(int remoteIdentifier)
+    private INitroxConnection GetConnection(int remoteIdentifier)
     {
-        NitroxConnection connection;
+        INitroxConnection connection;
         lock (connectionsByRemoteIdentifier)
         {
             connectionsByRemoteIdentifier.TryGetValue(remoteIdentifier, out connection);
