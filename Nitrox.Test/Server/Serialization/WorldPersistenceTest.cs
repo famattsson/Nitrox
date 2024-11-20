@@ -71,9 +71,6 @@ public class WorldPersistenceTest
                 Assert.AreEqual(equippedItemData.Slot, equippedItemDataAfter.Slot);
                 Assert.AreEqual(equippedItemData.TechType, equippedItemDataAfter.TechType);
                 break;
-            case PlantableItemData plantableItemData when itemDataAfter is PlantableItemData plantableItemDataAfter:
-                Assert.AreEqual(plantableItemData.PlantedGameTime, plantableItemDataAfter.PlantedGameTime);
-                break;
             default:
                 Assert.Fail($"Runtime types of {nameof(ItemData)} where not equal");
                 break;
@@ -229,7 +226,12 @@ public class WorldPersistenceTest
                 Assert.AreEqual(metadata.Duration, metadataAfter.Duration);
                 break;
             case PlantableMetadata metadata when entityAfter.Metadata is PlantableMetadata metadataAfter:
-                Assert.AreEqual(metadata.Progress, metadataAfter.Progress);
+                Assert.AreEqual(metadata.TimeStartGrowth, metadataAfter.TimeStartGrowth);
+                Assert.AreEqual(metadata.SlotID, metadataAfter.SlotID);
+                break;
+            case FruitPlantMetadata metadata when entityAfter.Metadata is FruitPlantMetadata metadataAfter:
+                Assert.AreEqual(metadata.PickedStates, metadataAfter.PickedStates);
+                Assert.AreEqual(metadata.TimeNextFruit, metadataAfter.TimeNextFruit);
                 break;
             case CyclopsMetadata metadata when entityAfter.Metadata is CyclopsMetadata metadataAfter:
                 Assert.AreEqual(metadata.SilentRunningOn, metadataAfter.SilentRunningOn);
@@ -323,6 +325,11 @@ public class WorldPersistenceTest
                 break;
             case EatableMetadata metadata when entityAfter.Metadata is EatableMetadata metadataAfter:
                 Assert.AreEqual(metadata.TimeDecayStart, metadataAfter.TimeDecayStart);
+                break;
+            case SeaTreaderMetadata metadata when entityAfter.Metadata is SeaTreaderMetadata metadataAfter:
+                Assert.AreEqual(metadata.ReverseDirection, metadataAfter.ReverseDirection);
+                Assert.AreEqual(metadata.GrazingEndTime, metadataAfter.GrazingEndTime);
+                Assert.AreEqual(metadata.LeashPosition, metadataAfter.LeashPosition);
                 break;
             default:
                 Assert.Fail($"Runtime type of {nameof(Entity)}.{nameof(Entity.Metadata)} is not equal: {entity.Metadata?.GetType().Name} - {entityAfter.Metadata?.GetType().Name}");

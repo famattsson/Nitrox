@@ -86,6 +86,7 @@ public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
         Player.main.SetPosition(positionInVehicle, rotation * vehicleAngle);
         Player.main.cinematicModeActive = false;
         Player.main.UpdateIsUnderwater();
+        Player.main.cinematicModeActive = false;
     }
 
     private void AttachPlayerToEscapePod(NitroxId escapePodId)
