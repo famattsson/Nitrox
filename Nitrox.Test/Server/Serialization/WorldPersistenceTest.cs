@@ -126,7 +126,7 @@ public class WorldPersistenceTest
 
             Assert.IsTrue(playerData.UsedItems.SequenceEqual(playerDataAfter.UsedItems));
             Assert.IsTrue(playerData.QuickSlotsBindingIds.SequenceEqual(playerDataAfter.QuickSlotsBindingIds));
-            AssertHelper.IsListEqual(playerData.EquippedItems.OrderBy(x => x.ItemId), playerDataAfter.EquippedItems.OrderBy(x => x.ItemId), ItemDataTest);
+            AssertHelper.IsListEqual(playerData.EquippedItems.OrderBy(x => x.Key), playerDataAfter.EquippedItems.OrderBy(x => x.Key), (id1, id2) => Assert.Equals(id1.Key, id2.Key));
             AssertHelper.IsListEqual(playerData.Modules.OrderBy(x => x.ItemId), playerDataAfter.Modules.OrderBy(x => x.ItemId), ItemDataTest);
 
             Assert.AreEqual(playerData.Id, playerDataAfter.Id);
