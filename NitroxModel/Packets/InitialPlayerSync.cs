@@ -30,10 +30,12 @@ namespace NitroxModel.Packets
         public List<SimulatedEntity> InitialSimulationOwnerships { get; }
         public NitroxGameMode GameMode { get; }
         public Perms Permissions { get; }
+        public IntroCinematicMode IntroCinematicMode { get; }
         public SubnauticaPlayerPreferences Preferences { get; }
         public TimeData TimeData { get; }
         public bool IsFirstPlayer { get; }
         public Dictionary<NitroxId, int> BuildOperationIds { get; }
+        public bool KeepInventoryOnDeath { get; }
 
         public InitialPlayerSync(NitroxId playerGameObjectId,
             bool firstTimeConnecting,
@@ -52,10 +54,12 @@ namespace NitroxModel.Packets
             IEnumerable<SimulatedEntity> initialSimulationOwnerships,
             NitroxGameMode gameMode,
             Perms perms,
+            IntroCinematicMode introCinematicMode,
             SubnauticaPlayerPreferences preferences,
             TimeData timeData,
             bool isFirstPlayer,
-            Dictionary<NitroxId, int> buildOperationIds)
+            Dictionary<NitroxId, int> buildOperationIds,
+            bool keepInventoryOnDeath)
         {
             AssignedEscapePodId = assignedEscapePodId;
             PlayerGameObjectId = playerGameObjectId;
@@ -74,10 +78,12 @@ namespace NitroxModel.Packets
             InitialSimulationOwnerships = initialSimulationOwnerships.ToList();
             GameMode = gameMode;
             Permissions = perms;
+            IntroCinematicMode = introCinematicMode;
             Preferences = preferences;
             TimeData = timeData;
             IsFirstPlayer = isFirstPlayer;
             BuildOperationIds = buildOperationIds;
+            KeepInventoryOnDeath = keepInventoryOnDeath;
         }
 
         /// <remarks>Used for deserialization</remarks>
@@ -99,10 +105,12 @@ namespace NitroxModel.Packets
             List<SimulatedEntity> initialSimulationOwnerships,
             NitroxGameMode gameMode,
             Perms permissions,
+            IntroCinematicMode introCinematicMode,
             SubnauticaPlayerPreferences preferences,
             TimeData timeData,
             bool isFirstPlayer,
-            Dictionary<NitroxId, int> buildOperationIds)
+            Dictionary<NitroxId, int> buildOperationIds,
+            bool keepInventoryOnDeath)
         {
             AssignedEscapePodId = assignedEscapePodId;
             PlayerGameObjectId = playerGameObjectId;
@@ -121,10 +129,12 @@ namespace NitroxModel.Packets
             InitialSimulationOwnerships = initialSimulationOwnerships;
             GameMode = gameMode;
             Permissions = permissions;
+            IntroCinematicMode = introCinematicMode;
             Preferences = preferences;
             TimeData = timeData;
             IsFirstPlayer = isFirstPlayer;
             BuildOperationIds = buildOperationIds;
+            KeepInventoryOnDeath = keepInventoryOnDeath;
         }
     }
 }

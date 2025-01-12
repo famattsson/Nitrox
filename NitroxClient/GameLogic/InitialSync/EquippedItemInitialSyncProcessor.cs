@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace NitroxClient.GameLogic.InitialSync;
 
-public class EquippedItemInitialSyncProcessor : InitialSyncProcessor
+public sealed class EquippedItemInitialSyncProcessor : InitialSyncProcessor
 {
     private readonly IPacketSender packetSender;
     private readonly Entities entities;

@@ -4,9 +4,11 @@ using NitroxModel.Core;
 using NitroxModel.DataStructures;
 using NitroxModel.DataStructures.GameLogic;
 using NitroxModel.DataStructures.GameLogic.Entities;
+using NitroxModel.DataStructures.GameLogic.Entities.Metadata;
 using NitroxModel.DataStructures.Unity;
 using NitroxModel.DataStructures.Util;
 using NitroxModel.Helper;
+using NitroxModel.Packets;
 using NitroxServer.GameLogic.Entities.Spawning;
 
 namespace NitroxServer.GameLogic.Entities;
@@ -30,11 +32,12 @@ public class WorldEntityManager
     private readonly Dictionary<NitroxId, GlobalRootEntity> globalRootEntitiesById;
 
     private readonly BatchEntitySpawner batchEntitySpawner;
+    private readonly PlayerManager playerManager;
 
     private readonly object worldEntitiesLock;
     private readonly object globalRootEntitiesLock;
 
-    public WorldEntityManager(EntityRegistry entityRegistry, BatchEntitySpawner batchEntitySpawner)
+    public WorldEntityManager(EntityRegistry entityRegistry, BatchEntitySpawner batchEntitySpawner, PlayerManager playerManager)
     {
         List<WorldEntity> worldEntities = entityRegistry.GetEntities<WorldEntity>();
 
@@ -45,6 +48,7 @@ public class WorldEntityManager
                                                .ToDictionary(group => group.Key, group => group.ToDictionary(entity => entity.Id, entity => entity));
         this.entityRegistry = entityRegistry;
         this.batchEntitySpawner = batchEntitySpawner;
+        this.playerManager = playerManager;
 
         worldEntitiesLock = new();
         globalRootEntitiesLock = new();
@@ -67,6 +71,21 @@ public class WorldEntityManager
         }
     }
 
+    public List<GlobalRootEntity> GetPersistentGlobalRootEntities()
+    {
+        // TODO: refactor if there are more entities that should not be persisted
+        return GetGlobalRootEntities(true).Where(entity =>
+        {
+            if (entity.Metadata is CyclopsMetadata cyclopsMetadata)
+            {
+                // Do not save cyclops wrecks
+                return !cyclopsMetadata.IsDestroyed;
+            }
+
+            return true;
+        }).ToList();
+    }
+
     public List<WorldEntity> GetEntities(AbsoluteEntityCell cell)
     {
         lock (worldEntitiesLock)
@@ -80,26 +99,31 @@ public class WorldEntityManager
         return [];
     }
 
-    public Optional<AbsoluteEntityCell> UpdateEntityPosition(NitroxId id, NitroxVector3 position, NitroxQuaternion rotation)
+    public bool UpdateEntityPosition(NitroxId id, NitroxVector3 position, NitroxQuaternion rotation, out AbsoluteEntityCell newCell, out WorldEntity worldEntity)
     {
-        if (!entityRegistry.TryGetEntityById(id, out WorldEntity entity))
+        lock (worldEntitiesLock)
         {
-            Log.WarnOnce($"[{nameof(WorldEntityManager)}] Can't update entity position of {entity.Id} because it isn't registered");
-            return Optional.Empty;
+            if (!entityRegistry.TryGetEntityById(id, out worldEntity))
+            {
+                Log.WarnOnce($"[{nameof(WorldEntityManager)}] Can't update entity position of {id} because it isn't registered");
+                newCell = null;
+                return false;
+            }
+
+            AbsoluteEntityCell oldCell = worldEntity.AbsoluteEntityCell;
+
+            worldEntity.Transform.Position = position;
+            worldEntity.Transform.Rotation = rotation;
+
+            newCell = worldEntity.AbsoluteEntityCell;
+            
+            if (oldCell != newCell)
+            {
+                EntitySwitchedCells(worldEntity, oldCell, newCell);
+            }
+
+            return true;
         }
-
-        AbsoluteEntityCell oldCell = entity.AbsoluteEntityCell;
-
-        entity.Transform.Position = position;
-        entity.Transform.Rotation = rotation;
-
-        AbsoluteEntityCell newCell = entity.AbsoluteEntityCell;
-        if (oldCell != newCell)
-        {
-            EntitySwitchedCells(entity, oldCell, newCell);
-        }
-
-        return Optional.Of(newCell);
     }
 
     public Optional<Entity> RemoveGlobalRootEntity(NitroxId entityId, bool removeFromRegistry = true)
@@ -193,7 +217,8 @@ public class WorldEntityManager
     {            
         IMap map = NitroxServiceLocator.LocateService<IMap>();
 
-        int totalEntites = 0;
+        int totalBatches = map.DimensionsInBatches.X * map.DimensionsInBatches.Y * map.DimensionsInBatches.Z;
+        int batchesLoaded = 0;
 
         for (int x = 0; x < map.DimensionsInBatches.X; x++)
         {
@@ -206,13 +231,13 @@ public class WorldEntityManager
 
                     Log.Debug($"Loaded {spawned} entities from batch ({x}, {y}, {z})");
 
-                    totalEntites += spawned;
+                    batchesLoaded++;
                 }
             }
 
-            if (totalEntites > 0)
+            if (batchesLoaded > 0)
             {
-                Log.Info($"Loading : {(int)((totalEntites/ 709531) * 100)}%");
+                Log.Info($"Loading : {(int)(100f * batchesLoaded / totalBatches)}%");
             }
         }
     }
@@ -261,7 +286,7 @@ public class WorldEntityManager
             return; // We don't care what cell a global root entity resides in.  Only phasing entities.
         }
 
-        if (oldCell.BatchId != newCell.BatchId)
+        if (oldCell != newCell)
         {
             lock (worldEntitiesLock)
             {
@@ -270,6 +295,15 @@ public class WorldEntityManager
 
                 // Automatically add entity to its new cell
                 RegisterWorldEntityInCell(entity, newCell);
+                
+                // It can happen for some players that the entity moves to a loaded cell of theirs, but that they hadn't spawned it in the first place
+                foreach (Player player in playerManager.ConnectedPlayers())
+                {
+                    if (player.HasCellLoaded(newCell) && !player.HasCellLoaded(oldCell))
+                    {
+                        player.SendPacket(new SpawnEntities(entity));
+                    }
+                }
             }
         }
     }

@@ -17,12 +17,13 @@ namespace NitroxClient.GameLogic.InitialSync;
 ///      - vehicles to use equipment
 ///      - other players to be set as drivers of some vehicle
 /// </remarks>
-public class GlobalRootInitialSyncProcessor : InitialSyncProcessor
+public sealed class GlobalRootInitialSyncProcessor : InitialSyncProcessor
 {
     private readonly Entities entities;
     private readonly BulletManager bulletManager;
     private readonly Vehicles vehicles;
     private readonly PlayerManager playerManager;
+    private readonly BulletManager bulletManager;
 
     public GlobalRootInitialSyncProcessor(Entities entities, Vehicles vehicles, PlayerManager playerManager, BulletManager bulletManager)
     {
@@ -52,6 +53,7 @@ public class GlobalRootInitialSyncProcessor : InitialSyncProcessor
         yield return BaseDeconstructable.InitializeAsync();
         yield return bulletManager.Initialize();
         yield return VirtualCyclops.InitializeConstructablesCache();
+        yield return bulletManager.Initialize();
 
         BuildingHandler.Main.InitializeOperations(packet.BuildOperationIds);
     }

@@ -51,7 +51,6 @@ public class AI
             return;
         }
 
-        ErrorMessage.AddMessage($"[SEND] synced action: {newAction.GetType().FullName}");
         packetSender.Send(new CreatureActionChanged(creatureId, newAction.GetType().FullName));
     }
 
@@ -61,13 +60,10 @@ public class AI
         {
             return;
         }
-        if (cachedCreatureActionTypeByFullName.TryGetValue(creatureActionTypeName, out Type creatureActionType))
+        if (cachedCreatureActionTypeByFullName.TryGetValue(creatureActionTypeName, out Type creatureActionType) &&
+            creature.TryGetComponent(creatureActionType, out Component component) && component is CreatureAction creatureAction)
         {
-            ErrorMessage.AddMessage($"[GET] {creatureActionType}");
-            if (creature.TryGetComponent(creatureActionType, out Component component) && component is CreatureAction creatureAction)
-            {
-                actions[creature] = creatureAction;
-            }
+            actions[creature] = creatureAction;
         }
     }
 
@@ -79,8 +75,6 @@ public class AI
             return;
         }
 
-        ErrorMessage.AddMessage($"[GET] {aggressiveWhenSeeTarget.gameObject.name} chases {targetObject.name}");
-
         Creature creature = aggressiveWhenSeeTarget.creature;
 
         // Code from AggressiveWhenSeeTarget.ScanForAggressionTarget
@@ -89,9 +83,9 @@ public class AI
         lastTarget.SetTargetInternal(targetObject);
         lastTarget.targetLocked = locked;
 
-        if (aggressiveWhenSeeTarget.sightedSound != null && !aggressiveWhenSeeTarget.sightedSound.GetIsPlaying())
+        if (aggressiveWhenSeeTarget.sightedSound && !aggressiveWhenSeeTarget.sightedSound.GetIsPlaying())
         {
-            // TODO: Adapt this code when #1780 is merged
+            // This call doesn't broadcast a sound packet
             aggressiveWhenSeeTarget.sightedSound.StartEvent();
         }
 
@@ -108,8 +102,6 @@ public class AI
         {
             return;
         }
-
-        ErrorMessage.AddMessage($"[GET] {attackCyclops.gameObject.name} attacks {targetObject.name}");
 
         // Kinda stuff from AttackCyclops.UpdateAggression
         attackCyclops.aggressiveToNoise.Value = aggressiveToNoiseAmount;
@@ -134,11 +126,9 @@ public class AI
         {
             case ActionState.CHARGING:
                 rangedAttackLastTarget.StartCharging(attackType);
-                ErrorMessage.AddMessage($"[GET] {rangedAttackLastTarget.name} charges against {targetObject.name}");
                 break;
             case ActionState.CASTING:
                 rangedAttackLastTarget.StartCasting(attackType);
-                ErrorMessage.AddMessage($"[GET] {rangedAttackLastTarget.name} casts against {targetObject.name}");
                 break;
         }
     }
@@ -155,8 +145,6 @@ public class AI
 
     public bool TryGetActionForCreature(Creature creature, out CreatureAction action)
     {
-        // TODO: Fix ondeath cinematic being played for all players when getting bitten by a reaper
-        // TODO: When #2043 is merged, blacklist the cinematic
         return actions.TryGetValue(creature, out action);
     }
 

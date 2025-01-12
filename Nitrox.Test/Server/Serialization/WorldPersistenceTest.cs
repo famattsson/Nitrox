@@ -57,26 +57,6 @@ public class WorldPersistenceTest
         StoryTimingTest(worldData.WorldData.GameData.StoryTiming, worldDataAfter.WorldData.GameData.StoryTiming);
     }
 
-    private static void ItemDataTest(ItemData itemData, ItemData itemDataAfter)
-    {
-        Assert.AreEqual(itemData.ContainerId, itemDataAfter.ContainerId);
-        Assert.AreEqual(itemData.ItemId, itemDataAfter.ItemId);
-        Assert.IsTrue(itemData.SerializedData.SequenceEqual(itemDataAfter.SerializedData));
-
-        switch (itemData)
-        {
-            case BasicItemData _ when itemDataAfter is BasicItemData _:
-                break;
-            case EquippedItemData equippedItemData when itemDataAfter is EquippedItemData equippedItemDataAfter:
-                Assert.AreEqual(equippedItemData.Slot, equippedItemDataAfter.Slot);
-                Assert.AreEqual(equippedItemData.TechType, equippedItemDataAfter.TechType);
-                break;
-            default:
-                Assert.Fail($"Runtime types of {nameof(ItemData)} where not equal");
-                break;
-        }
-    }
-
     private static void PDAStateTest(PDAStateData pdaState, PDAStateData pdaStateAfter)
     {
         Assert.IsTrue(pdaState.KnownTechTypes.SequenceEqual(pdaStateAfter.KnownTechTypes));
@@ -101,7 +81,6 @@ public class WorldPersistenceTest
     {
         Assert.IsTrue(storyGoal.CompletedGoals.SequenceEqual(storyGoalAfter.CompletedGoals));
         Assert.IsTrue(storyGoal.RadioQueue.SequenceEqual(storyGoalAfter.RadioQueue));
-        Assert.IsTrue(storyGoal.GoalUnlocks.SequenceEqual(storyGoalAfter.GoalUnlocks));
         AssertHelper.IsListEqual(storyGoal.ScheduledGoals.OrderBy(x => x.GoalKey), storyGoalAfter.ScheduledGoals.OrderBy(x => x.GoalKey), (scheduledGoal, scheduledGoalAfter) =>
         {
             Assert.AreEqual(scheduledGoal.TimeExecute, scheduledGoalAfter.TimeExecute);
@@ -126,8 +105,11 @@ public class WorldPersistenceTest
 
             Assert.IsTrue(playerData.UsedItems.SequenceEqual(playerDataAfter.UsedItems));
             Assert.IsTrue(playerData.QuickSlotsBindingIds.SequenceEqual(playerDataAfter.QuickSlotsBindingIds));
-            AssertHelper.IsListEqual(playerData.EquippedItems.OrderBy(x => x.Key), playerDataAfter.EquippedItems.OrderBy(x => x.Key), (id1, id2) => Assert.Equals(id1.Key, id2.Key));
-            AssertHelper.IsListEqual(playerData.Modules.OrderBy(x => x.ItemId), playerDataAfter.Modules.OrderBy(x => x.ItemId), ItemDataTest);
+            AssertHelper.IsDictionaryEqual(playerData.EquippedItems, playerDataAfter.EquippedItems, (keyValuePair, keyValuePairAfter) =>
+            {
+                Assert.AreEqual(keyValuePair.Key, keyValuePairAfter.Key);
+                Assert.AreEqual(keyValuePair.Value, keyValuePairAfter.Value);
+            });
 
             Assert.AreEqual(playerData.Id, playerDataAfter.Id);
             Assert.AreEqual(playerData.SpawnPosition, playerDataAfter.SpawnPosition);
@@ -329,6 +311,9 @@ public class WorldPersistenceTest
             case SeaTreaderMetadata metadata when entityAfter.Metadata is SeaTreaderMetadata metadataAfter:
                 Assert.AreEqual(metadata.ReverseDirection, metadataAfter.ReverseDirection);
                 Assert.AreEqual(metadata.GrazingEndTime, metadataAfter.GrazingEndTime);
+                Assert.AreEqual(metadata.LeashPosition, metadataAfter.LeashPosition);
+                break;
+            case StayAtLeashPositionMetadata metadata when entityAfter.Metadata is StayAtLeashPositionMetadata metadataAfter:
                 Assert.AreEqual(metadata.LeashPosition, metadataAfter.LeashPosition);
                 break;
             default:

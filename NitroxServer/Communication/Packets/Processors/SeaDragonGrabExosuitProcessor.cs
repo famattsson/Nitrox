@@ -5,7 +5,10 @@ using NitroxServer.GameLogic.Entities;
 
 namespace NitroxServer.Communication.Packets.Processors;
 
-public class SeaDragonGrabExosuitProcessor : TransmitIfCanSeePacketProcessor<SeaDragonGrabExosuit>
+public class SeaDragonGrabExosuitProcessor(
+    PlayerManager playerManager,
+    EntityRegistry entityRegistry
+) : TransmitIfCanSeePacketProcessor<SeaDragonGrabExosuit>(playerManager, entityRegistry)
 {
     public SeaDragonGrabExosuitProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
 

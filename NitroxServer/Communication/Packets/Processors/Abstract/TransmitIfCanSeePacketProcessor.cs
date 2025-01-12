@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NitroxModel.DataStructures;
 using NitroxModel.DataStructures.GameLogic;
 using NitroxModel.Packets;
@@ -50,7 +51,7 @@ public abstract class TransmitIfCanSeePacketProcessor<T> : AuthenticatedPacketPr
 
         foreach (Player player in playerManager.GetConnectedPlayersExcept(senderPlayer))
         {
-            if (canPlayerSeeAllEntities(player))
+            if (entities.All(player.CanSee))
             {
                 player.SendPacket(packet);
             }

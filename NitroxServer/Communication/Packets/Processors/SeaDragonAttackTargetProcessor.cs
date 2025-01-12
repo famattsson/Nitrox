@@ -5,7 +5,10 @@ using NitroxServer.GameLogic.Entities;
 
 namespace NitroxServer.Communication.Packets.Processors;
 
-public class SeaDragonAttackTargetProcessor : TransmitIfCanSeePacketProcessor<SeaDragonAttackTarget>
+public class SeaDragonAttackTargetProcessor(
+    PlayerManager playerManager,
+    EntityRegistry entityRegistry
+) : TransmitIfCanSeePacketProcessor<SeaDragonAttackTarget>(playerManager, entityRegistry)
 {
     public SeaDragonAttackTargetProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
 

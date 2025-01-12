@@ -5,7 +5,10 @@ using NitroxServer.GameLogic.Entities;
 
 namespace NitroxServer.Communication.Packets.Processors;
 
-public class AttackCyclopsTargetChangedProcessor : TransmitIfCanSeePacketProcessor<AttackCyclopsTargetChanged>
+public class AttackCyclopsTargetChangedProcessor(
+    PlayerManager playerManager,
+    EntityRegistry entityRegistry
+) : TransmitIfCanSeePacketProcessor<AttackCyclopsTargetChanged>(playerManager, entityRegistry)
 {
     public AttackCyclopsTargetChangedProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
 

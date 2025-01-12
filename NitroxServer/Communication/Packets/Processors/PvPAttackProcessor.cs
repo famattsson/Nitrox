@@ -12,7 +12,7 @@ public class PvPAttackProcessor : AuthenticatedPacketProcessor<PvPAttack>
     private readonly PlayerManager playerManager;
 
     // TODO: In the future, do a whole config for damage sources
-    private static readonly Dictionary<PvPAttack.AttackType, float> DamageMultiplierByType = new()
+    private static readonly Dictionary<PvPAttack.AttackType, float> damageMultiplierByType = new()
     {
         { PvPAttack.AttackType.KnifeHit, 0.5f },
         { PvPAttack.AttackType.HeatbladeHit, 1f }
@@ -26,12 +26,21 @@ public class PvPAttackProcessor : AuthenticatedPacketProcessor<PvPAttack>
 
     public override void Process(PvPAttack packet, Player player)
     {
-        if (serverConfig.PvPEnabled &&
-            playerManager.TryGetPlayerByName(packet.TargetPlayerName, out Player targetPlayer) &&
-            DamageMultiplierByType.TryGetValue(packet.Type, out float multiplier))
+        if (!serverConfig.PvPEnabled)
         {
-            packet.Damage *= multiplier;
-            targetPlayer.SendPacket(packet);
+            return;
         }
+        if (!playerManager.TryGetPlayerById(packet.TargetPlayerId, out Player targetPlayer))
+        {
+            return;
+        }
+        if (!damageMultiplierByType.TryGetValue(packet.Type, out float multiplier))
+        {
+            return;
+        }
+
+        packet.Damage *= multiplier;
+        targetPlayer.SendPacket(packet);
     }
+}
 }

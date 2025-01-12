@@ -5,7 +5,10 @@ using NitroxServer.GameLogic.Entities;
 
 namespace NitroxServer.Communication.Packets.Processors;
 
-public class SeaTreaderSpawnedChunkProcessor : TransmitIfCanSeePacketProcessor<SeaTreaderSpawnedChunk>
+public class SeaTreaderSpawnedChunkProcessor(
+    PlayerManager playerManager,
+    EntityRegistry entityRegistry
+) : TransmitIfCanSeePacketProcessor<SeaTreaderSpawnedChunk>(playerManager, entityRegistry)
 {
     public SeaTreaderSpawnedChunkProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
 

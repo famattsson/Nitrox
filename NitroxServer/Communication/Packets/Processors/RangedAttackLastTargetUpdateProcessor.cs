@@ -5,7 +5,10 @@ using NitroxServer.GameLogic.Entities;
 
 namespace NitroxServer.Communication.Packets.Processors;
 
-public class RangedAttackLastTargetUpdateProcessor : TransmitIfCanSeePacketProcessor<RangedAttackLastTargetUpdate>
+public class RangedAttackLastTargetUpdateProcessor(
+    PlayerManager playerManager,
+    EntityRegistry entityRegistry
+) : TransmitIfCanSeePacketProcessor<RangedAttackLastTargetUpdate>(playerManager, entityRegistry)
 {
     public RangedAttackLastTargetUpdateProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
 

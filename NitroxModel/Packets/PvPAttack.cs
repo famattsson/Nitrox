@@ -5,18 +5,18 @@ namespace NitroxModel.Packets;
 [Serializable]
 public class PvPAttack : Packet
 {
-    public string TargetPlayerName { get; }
+    public ushort TargetPlayerId { get; }
     public float Damage { get; set; }
     public AttackType Type { get; }
 
-    public PvPAttack(string targetPlayerName, float damage, AttackType type)
+    public PvPAttack(ushort targetPlayerId, float damage, AttackType type)
     {
-        TargetPlayerName = targetPlayerName;
+        TargetPlayerId = targetPlayerId;
         Damage = damage;
         Type = type;
     }
 
-    public enum AttackType
+    public enum AttackType : byte
     {
         KnifeHit,
         HeatbladeHit
