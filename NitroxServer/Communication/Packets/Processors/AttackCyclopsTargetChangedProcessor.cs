@@ -10,7 +10,5 @@ public class AttackCyclopsTargetChangedProcessor(
     EntityRegistry entityRegistry
 ) : TransmitIfCanSeePacketProcessor<AttackCyclopsTargetChanged>(playerManager, entityRegistry)
 {
-    public AttackCyclopsTargetChangedProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
-
     public override void Process(AttackCyclopsTargetChanged packet, Player sender) => TransmitIfCanSeeEntities(packet, sender, [packet.CreatureId, packet.TargetId]);
 }

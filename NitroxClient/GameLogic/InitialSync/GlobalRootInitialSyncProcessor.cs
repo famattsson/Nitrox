@@ -23,7 +23,6 @@ public sealed class GlobalRootInitialSyncProcessor : InitialSyncProcessor
     private readonly BulletManager bulletManager;
     private readonly Vehicles vehicles;
     private readonly PlayerManager playerManager;
-    private readonly BulletManager bulletManager;
 
     public GlobalRootInitialSyncProcessor(Entities entities, Vehicles vehicles, PlayerManager playerManager, BulletManager bulletManager)
     {

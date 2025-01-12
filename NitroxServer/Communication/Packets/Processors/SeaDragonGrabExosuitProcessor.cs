@@ -10,7 +10,5 @@ public class SeaDragonGrabExosuitProcessor(
     EntityRegistry entityRegistry
 ) : TransmitIfCanSeePacketProcessor<SeaDragonGrabExosuit>(playerManager, entityRegistry)
 {
-    public SeaDragonGrabExosuitProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
-
     public override void Process(SeaDragonGrabExosuit packet, Player sender) => TransmitIfCanSeeEntities(packet, sender, [packet.SeaDragonId, packet.TargetId]);
 }

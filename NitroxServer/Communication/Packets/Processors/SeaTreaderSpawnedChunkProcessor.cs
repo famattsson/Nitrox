@@ -10,7 +10,5 @@ public class SeaTreaderSpawnedChunkProcessor(
     EntityRegistry entityRegistry
 ) : TransmitIfCanSeePacketProcessor<SeaTreaderSpawnedChunk>(playerManager, entityRegistry)
 {
-    public SeaTreaderSpawnedChunkProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
-
     public override void Process(SeaTreaderSpawnedChunk packet, Player sender) => TransmitIfCanSeeEntities(packet, sender, [packet.CreatureId]);
 }

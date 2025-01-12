@@ -43,4 +43,3 @@ public class PvPAttackProcessor : AuthenticatedPacketProcessor<PvPAttack>
         targetPlayer.SendPacket(packet);
     }
 }
-}

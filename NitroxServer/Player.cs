@@ -14,9 +14,6 @@ namespace NitroxServer
 {
     public class Player : IProcessorContext
     {
-        private readonly ThreadSafeList<EquippedItemData> equippedItems;
-        private readonly ThreadSafeList<EquippedItemData> modules;
-        private readonly ThreadSafeList<EquippedItemData> modules;
         private readonly ThreadSafeSet<AbsoluteEntityCell> visibleCells;
 
         public ThreadSafeList<NitroxTechType> UsedItems { get; }
@@ -48,7 +45,6 @@ namespace NitroxServer
         public Player(ushort id, string name, bool isPermaDeath, PlayerContext playerContext, INitroxConnection connection,
                       NitroxVector3 position, NitroxQuaternion rotation, NitroxId playerId, Optional<NitroxId> subRootId, Perms perms, PlayerStatsData stats, NitroxGameMode gameMode,
                       IDictionary<string, NitroxId> equippedItems, IDictionary<string, float> personalCompletedGoalsWithTimestamp, IDictionary<string, PingInstancePreference> pingInstancePreferences, IList<int> pinnedRecipePreferences)
-                      IEnumerable<EquippedItemData> equippedItems, IEnumerable<EquippedItemData> modules, IDictionary<string, float> personalCompletedGoalsWithTimestamp, IDictionary<string, PingInstancePreference> pingInstancePreferences, IList<int> pinnedRecipePreferences)
         {
             Id = id;
             Name = name;
@@ -65,8 +61,6 @@ namespace NitroxServer
             LastStoredPosition = null;
             LastStoredSubRootID = Optional.Empty;
             EquippedItems = new ThreadSafeDictionary<string, NitroxId>(equippedItems);
-            this.equippedItems = new ThreadSafeList<EquippedItemData>(equippedItems);
-            this.modules = new ThreadSafeList<EquippedItemData>(modules);
             visibleCells = new ThreadSafeSet<AbsoluteEntityCell>();
             PersonalCompletedGoalsWithTimestamp = new ThreadSafeDictionary<string, float>(personalCompletedGoalsWithTimestamp);
             PingInstancePreferences = new(pingInstancePreferences);
@@ -137,20 +131,6 @@ namespace NitroxServer
         public void ClearVisibleCells()
         {
             visibleCells.Clear();
-        public void AddModule(EquippedItemData module)
-        {
-            modules.Add(module);
-        }
-
-        public void RemoveModule(NitroxId id)
-        {
-            modules.RemoveAll(item => item.ItemId.Equals(id));
-        }
-
-        public List<EquippedItemData> GetModules()
-        {
-            return modules.ToList();
-        }
 
         }
 

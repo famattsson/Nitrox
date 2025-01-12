@@ -57,12 +57,6 @@ public sealed partial class AttackCyclops_UpdateAggression_Patch : NitroxPatch, 
                                             ]).InstructionEnumeration();
     }
 
-    public static bool Prefix(AttackCyclops __instance)
-    {
-        return !__instance.TryGetNitroxId(out NitroxId creatureId) ||
-               Resolve<SimulationOwnership>().HasAnyLockType(creatureId);
-    }
-
     public static void Postfix(AttackCyclops __instance)
     {
         if (__instance.currentTarget && __instance.TryGetNitroxId(out NitroxId creatureId) &&

@@ -134,7 +134,7 @@ public sealed partial class LiveMixin_TakeDamage_Patch : NitroxPatch, IDynamicPa
                     // We don't want to send non-registered attacks
                     return;
             }
-            Resolve<IPacketSender>().Send(new PvPAttack(remotePlayer.PlayerName, damage, attackType));
+            Resolve<IPacketSender>().Send(new PvPAttack(remotePlayer.PlayerId, damage, attackType));
         }
     }
 }

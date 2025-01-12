@@ -64,23 +64,22 @@ public class PersistedPlayerData
     public Player ToPlayer()
     {
         return new Player(Id,
-                          Name,
-                          IsPermaDeath,
-                          null, //no connection/context as this player is not connected.
-                          null,
-                          SpawnPosition,
-                          SpawnRotation,
-                          NitroxId,
-                          Optional.OfNullable(SubRootId),
-                          Permissions,
-                          CurrentStats,
-                          GameMode,
-                          UsedItems,
-                          QuickSlotsBindingIds,
-                          EquippedItems,
-                          PersonalCompletedGoalsWithTimestamp,
-                          PlayerPreferences.PingPreferences,
-                          PlayerPreferences.PinnedTechTypes);
+            Name,
+            IsPermaDeath,
+            null, //no connection/context as this player is not connected.
+            null,
+            SpawnPosition,
+            SpawnRotation,
+            NitroxId,
+            Optional.OfNullable(SubRootId),
+            Permissions,
+            CurrentStats,
+            GameMode,
+            EquippedItems,
+            PersonalCompletedGoalsWithTimestamp,
+            PlayerPreferences.PingPreferences,
+            PlayerPreferences.PinnedTechTypes
+        );
     }
 
     public static PersistedPlayerData FromPlayer(Player player)
@@ -91,8 +90,6 @@ public class PersistedPlayerData
             UsedItems = player.UsedItems?.ToList(),
             QuickSlotsBindingIds = player.QuickSlotsBindingIds,
             EquippedItems = new(player.EquippedItems),
-            EquippedItems = new(player.EquippedItems),
-            Modules = player.GetModules(),
             Id = player.Id,
             SpawnPosition = player.Position,
             SpawnRotation = player.Rotation,

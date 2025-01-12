@@ -10,7 +10,5 @@ public class SeaDragonAttackTargetProcessor(
     EntityRegistry entityRegistry
 ) : TransmitIfCanSeePacketProcessor<SeaDragonAttackTarget>(playerManager, entityRegistry)
 {
-    public SeaDragonAttackTargetProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
-
     public override void Process(SeaDragonAttackTarget packet, Player sender) => TransmitIfCanSeeEntities(packet, sender, [packet.SeaDragonId, packet.TargetId]);
 }

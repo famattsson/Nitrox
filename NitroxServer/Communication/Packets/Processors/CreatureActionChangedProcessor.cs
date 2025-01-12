@@ -10,7 +10,5 @@ public class CreatureActionChangedProcessor(
     EntityRegistry entityRegistry
 ) : TransmitIfCanSeePacketProcessor<CreatureActionChanged>(playerManager, entityRegistry)
 {
-    public CreatureActionChangedProcessor(PlayerManager playerManager, EntityRegistry entityRegistry) : base(playerManager, entityRegistry) { }
-
     public override void Process(CreatureActionChanged packet, Player sender) => TransmitIfCanSeeEntities(packet, sender, [packet.CreatureId]);
 }

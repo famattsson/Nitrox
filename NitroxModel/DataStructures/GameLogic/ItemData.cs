@@ -7,8 +7,6 @@ namespace NitroxModel.DataStructures.GameLogic
 {
     [Serializable]
     [DataContract]
-    [ProtoInclude(50, typeof(BasicItemData))]
-    [ProtoInclude(51, typeof(EquippedItemData))]
     public abstract class ItemData
     {
         [DataMember(Order = 1)]
