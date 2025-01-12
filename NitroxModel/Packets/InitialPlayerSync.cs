@@ -65,7 +65,7 @@ namespace NitroxModel.Packets
             PlayerGameObjectId = playerGameObjectId;
             FirstTimeConnecting = firstTimeConnecting;
             EquippedItems = new(equipment);
-            UsedItems = usedItems.ToList();
+            UsedItems = usedItems?.ToList() ?? new List<NitroxTechType>(); 
             QuickSlotsBindingIds = quickSlotsBindingIds;
             PDAData = pdaData;
             StoryGoalData = storyGoalData;

@@ -17,7 +17,7 @@ public class PersistedPlayerData
     public string Name { get; set; }
 
     [DataMember(Order = 2)]
-    public List<NitroxTechType> UsedItems { get; set; } = new List<NitroxTechType>();
+    public ThreadSafeList<NitroxTechType> UsedItems { get; set; } = new ThreadSafeList<NitroxTechType>();
 
     [DataMember(Order = 3)]
     public Optional<NitroxId>[] QuickSlotsBindingIds { get; set; } = Array.Empty<Optional<NitroxId>>();
@@ -78,7 +78,8 @@ public class PersistedPlayerData
             EquippedItems,
             PersonalCompletedGoalsWithTimestamp,
             PlayerPreferences.PingPreferences,
-            PlayerPreferences.PinnedTechTypes
+            PlayerPreferences.PinnedTechTypes,
+            UsedItems
         );
     }
 
@@ -87,7 +88,7 @@ public class PersistedPlayerData
         return new PersistedPlayerData
         {
             Name = player.Name,
-            UsedItems = player.UsedItems?.ToList(),
+            UsedItems = player.UsedItems,
             QuickSlotsBindingIds = player.QuickSlotsBindingIds,
             EquippedItems = new(player.EquippedItems),
             Id = player.Id,

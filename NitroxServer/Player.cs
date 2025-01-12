@@ -16,7 +16,7 @@ namespace NitroxServer
     {
         private readonly ThreadSafeSet<AbsoluteEntityCell> visibleCells;
 
-        public ThreadSafeList<NitroxTechType> UsedItems { get; }
+        public ThreadSafeList<NitroxTechType> UsedItems { get; set; }
         public Optional<NitroxId>[] QuickSlotsBindingIds { get; set; }
 
         public INitroxConnection Connection { get; set; }
@@ -42,9 +42,24 @@ namespace NitroxServer
 
         public PlayerWorldEntity Entity { get; set; }
 
-        public Player(ushort id, string name, bool isPermaDeath, PlayerContext playerContext, INitroxConnection connection,
-                      NitroxVector3 position, NitroxQuaternion rotation, NitroxId playerId, Optional<NitroxId> subRootId, Perms perms, PlayerStatsData stats, NitroxGameMode gameMode,
-                      IDictionary<string, NitroxId> equippedItems, IDictionary<string, float> personalCompletedGoalsWithTimestamp, IDictionary<string, PingInstancePreference> pingInstancePreferences, IList<int> pinnedRecipePreferences)
+        public Player(
+            ushort id,
+            string name,
+            bool isPermaDeath,
+            PlayerContext playerContext,
+            INitroxConnection connection,
+            NitroxVector3 position,
+            NitroxQuaternion rotation,
+            NitroxId playerId,
+            Optional<NitroxId> subRootId,
+            Perms perms,
+            PlayerStatsData stats,
+            NitroxGameMode gameMode,
+            IDictionary<string, NitroxId> equippedItems,
+            IDictionary<string, float> personalCompletedGoalsWithTimestamp,
+            IDictionary<string, PingInstancePreference> pingInstancePreferences,
+            IList<int> pinnedRecipePreferences,
+            ThreadSafeList<NitroxTechType> usedItems)
         {
             Id = id;
             Name = name;
@@ -65,6 +80,7 @@ namespace NitroxServer
             PersonalCompletedGoalsWithTimestamp = new ThreadSafeDictionary<string, float>(personalCompletedGoalsWithTimestamp);
             PingInstancePreferences = new(pingInstancePreferences);
             PinnedRecipePreferences = new(pinnedRecipePreferences);
+            UsedItems = usedItems;
         }
 
         public static bool operator ==(Player left, Player right)

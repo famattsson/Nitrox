@@ -194,22 +194,24 @@ namespace NitroxServer.GameLogic
 
             if (!allPlayersByName.TryGetValue(playerContext.PlayerName, out Player player))
             {
-                player = new Player(playerContext.PlayerId,
-                    playerContext.PlayerName,
-                    false,
-                    playerContext,
-                    connection,
-                    NitroxVector3.Zero,
-                    NitroxQuaternion.Identity,
-                    playerContext.PlayerNitroxId,
-                    Optional.Empty,
-                    serverConfig.DefaultPlayerPerm,
-                    serverConfig.DefaultPlayerStats,
-                    serverConfig.GameMode,
-                    new Dictionary<string, NitroxId>(),
-                    new Dictionary<string, float>(),
-                    new Dictionary<string, PingInstancePreference>(),
-                    new List<int>()
+                Console.WriteLine("Could not find player, making new object");
+                player = new Player(id: playerContext.PlayerId,
+                    name: playerContext.PlayerName,
+                    isPermaDeath: false,
+                    playerContext: playerContext,
+                    connection: connection,
+                    position: NitroxVector3.Zero,
+                    rotation: NitroxQuaternion.Identity,
+                    playerId: playerContext.PlayerNitroxId,
+                    subRootId: Optional.Empty,
+                    perms: serverConfig.DefaultPlayerPerm,
+                    stats: serverConfig.DefaultPlayerStats,
+                    gameMode: serverConfig.GameMode,
+                    equippedItems: new Dictionary<string, NitroxId>(),
+                    personalCompletedGoalsWithTimestamp: new Dictionary<string, float>(),
+                    pingInstancePreferences: new Dictionary<string, PingInstancePreference>(),
+                    pinnedRecipePreferences: new List<int>(),
+                    usedItems: new ()
                 );
                 allPlayersByName[playerContext.PlayerName] = player;
             }
